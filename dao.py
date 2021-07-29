@@ -49,7 +49,6 @@ class JogoDao:
 
     def listar(self):
         cursor = self.__db.cursor()
-
         cursor.execute(SQL_BUSCA_JOGOS)
         jogos = traduz_jogos(cursor.fetchall())
         return jogos
