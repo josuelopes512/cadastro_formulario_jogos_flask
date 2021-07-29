@@ -1,5 +1,7 @@
 import os
+import sqlite3
 from app import app
+from dao import UsuarioDao
 
 
 def recupera_imagem(id):
@@ -14,3 +16,12 @@ def recupera_imagem(id):
 def deleta_arquivo(id):
     arquivo = recupera_imagem(id)
     os.remove(os.path.join(app.config['UPLOAD_PATH'], arquivo))
+
+
+def consulta_usuario(id):
+    usuario_dao = UsuarioDao(sqlite3.connect('bd.sqlite3'))
+    user = usuario_dao.buscar_por_id(id)
+    if user:
+        return user.nome
+    else:
+        return ''

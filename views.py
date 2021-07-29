@@ -3,7 +3,7 @@ from dao import JogoDao, UsuarioDao
 import sqlite3
 import time
 
-from helpers import deleta_arquivo, recupera_imagem
+from helpers import deleta_arquivo, recupera_imagem, consulta_usuario
 
 from flask import (
     Flask,
@@ -20,21 +20,12 @@ app = Flask(__name__)
 app.config.from_pyfile('config.py')
 
 
-def consulta(id):
-    usuario_dao = UsuarioDao(sqlite3.connect('bd.sqlite3'))
-    user = usuario_dao.buscar_por_id(id)
-    if user:
-        return user.nome
-    else:
-        return ''
-
-
 @app.route('/')
 def index():
     jogo_dao = JogoDao(sqlite3.connect('bd.sqlite3'))
     lista = jogo_dao.listar()
     if 'usuario_logado' in session:
-        nome = consulta(session['usuario_logado'])
+        nome = consulta_usuario(session['usuario_logado'])
     else:
         nome = ''
 
@@ -45,7 +36,7 @@ def index():
 def novo():
     if 'usuario_logado' not in session or session['usuario_logado'] == None:
         return redirect(url_for('login', proxima=url_for('novo')))
-    nome = consulta(session['usuario_logado'])
+    nome = consulta_usuario(session['usuario_logado'])
 
     return render_template('novo.html', titulo='Novo Jogo', usuario=nome)
 
@@ -79,7 +70,8 @@ def editar(id):
     jogo = jogo_dao.busca_por_id(id)
     nome_imagem = recupera_imagem(id)
     capa_jogo = f'capa{id}.jpg'
-    nome = consulta(session['usuario_logado'])
+    nome = consulta_usuario(session['usuario_logado'])
+
     return render_template('editar.html', titulo='Editando jogo', jogo=jogo, capa_jogo=nome_imagem, usuario=nome)
 
 
