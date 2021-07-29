@@ -1,17 +1,18 @@
 from models import Jogo, Usuario
 from dao import JogoDao, UsuarioDao
-import sqlite3, os, time
+import sqlite3
+import time
 
 from helpers import deleta_arquivo, recupera_imagem
 
 from flask import (
-    Flask, 
-    render_template, 
-    request, 
-    redirect, 
-    session, 
-    flash, 
-    url_for, 
+    Flask,
+    render_template,
+    request,
+    redirect,
+    session,
+    flash,
+    url_for,
     send_from_directory
 )
 
@@ -19,31 +20,25 @@ app = Flask(__name__)
 app.config.from_pyfile('config.py')
 
 
-# session['usuario_logado']
 def consulta(id):
     usuario_dao = UsuarioDao(sqlite3.connect('bd.sqlite3'))
     user = usuario_dao.buscar_por_id(id)
-    if user:   
+    if user:
         return user.nome
     else:
         return ''
-
 
 
 @app.route('/')
 def index():
     jogo_dao = JogoDao(sqlite3.connect('bd.sqlite3'))
     lista = jogo_dao.listar()
-    nome = consulta(session['usuario_logado'])
-    # usuario_dao = UsuarioDao(sqlite3.connect('bd.sqlite3'))
-    # user = usuario_dao.buscar_por_id(session['usuario_logado'])
-    # if user:   
-    #     nome = user.nome
-    # else:
-    #     nome = ''
-    
-    return render_template('lista.html', titulo='Jogos', jogos=lista, usuario=nome )
+    if 'usuario_logado' in session:
+        nome = consulta(session['usuario_logado'])
+    else:
+        nome = ''
 
+    return render_template('lista.html', titulo='Jogos', jogos=lista, usuario=nome)
 
 
 @app.route('/novo')
@@ -51,8 +46,9 @@ def novo():
     if 'usuario_logado' not in session or session['usuario_logado'] == None:
         return redirect(url_for('login', proxima=url_for('novo')))
     nome = consulta(session['usuario_logado'])
-    
+
     return render_template('novo.html', titulo='Novo Jogo', usuario=nome)
+
 
 @app.route('/criar', methods=['POST'])
 def criar():
@@ -69,9 +65,11 @@ def criar():
 
     return redirect(url_for('index'))
 
+
 @app.route('/uploads/<nome_arquivo>')
 def imagem(nome_arquivo):
     return send_from_directory('uploads', nome_arquivo)
+
 
 @app.route('/editar/<int:id>')
 def editar(id):
@@ -79,13 +77,13 @@ def editar(id):
         return redirect(url_for('login', proxima=url_for('editar')))
     jogo_dao = JogoDao(sqlite3.connect('bd.sqlite3'))
     jogo = jogo_dao.busca_por_id(id)
-    nome_imagem =  recupera_imagem(id)
+    nome_imagem = recupera_imagem(id)
     capa_jogo = f'capa{id}.jpg'
     nome = consulta(session['usuario_logado'])
     return render_template('editar.html', titulo='Editando jogo', jogo=jogo, capa_jogo=nome_imagem, usuario=nome)
 
 
-@app.route('/atualizar', methods=['POST',])
+@app.route('/atualizar', methods=['POST', ])
 def atualizar():
     nome = request.form['nome']
     categoria = request.form['categoria']
@@ -102,6 +100,7 @@ def atualizar():
 
     return redirect(url_for('index'))
 
+
 @app.route('/deletar/<int:id>')
 def deletar(id):
     jogo_dao = JogoDao(sqlite3.connect('bd.sqlite3'))
@@ -109,10 +108,12 @@ def deletar(id):
     flash('O jogo foi removido com sucesso!')
     return redirect(url_for('index'))
 
+
 @app.route('/login')
 def login():
     proxima = request.args.get('proxima')
     return render_template('login.html', titulo='Login', proxima=proxima)
+
 
 @app.route('/logout')
 def logout():
@@ -120,7 +121,8 @@ def logout():
     flash('Nenhum usuário logado!')
     return redirect(url_for('index'))
 
-@app.route('/autenticar', methods=['POST',])
+
+@app.route('/autenticar', methods=['POST', ])
 def autenticar():
     usuario_dao = UsuarioDao(sqlite3.connect('bd.sqlite3'))
     usuario = usuario_dao.buscar_por_nome(request.form['usuario'])
@@ -137,12 +139,13 @@ def autenticar():
         flash('Usuario ou Senha Incorreta - Tente de Novo !!!!')
         return redirect(url_for('login'))
 
+
 @app.route('/cadastro')
 def cadastro():
-    return render_template('cadastro.html', titulo='Cadastrar Login') 
+    return render_template('cadastro.html', titulo='Cadastrar Login')
 
 
-@app.route('/cadastrar', methods=['POST',])
+@app.route('/cadastrar', methods=['POST', ])
 def cadastrar():
     usuario = request.form['usuario']
     senha = request.form['senha']

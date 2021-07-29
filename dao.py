@@ -7,7 +7,7 @@ SQL_USUARIO_POR_ID = 'SELECT id, nome, senha from usuario where id = ?'
 # SQL_ATUALIZA_USUARIO = 'UPDATE usuario SET nome= ?, senha= ? where id = ?'
 SQL_ATUALIZA_USUARIO = 'UPDATE usuario SET senha= ? where id = ?'
 SQL_CRIA_USUARIO = 'INSERT INTO usuario(nome, senha) VALUES (?,?)'
-SQL_BUSCA_USUARIO  = 'SELECT id, nome, senha from usuario'
+SQL_BUSCA_USUARIO = 'SELECT id, nome, senha from usuario'
 SQL_CRIA_TABELA_USUARIO = """
         create table if not exists usuario(
         id integer primary key autoincrement,
@@ -38,9 +38,11 @@ class JogoDao:
     def salvar(self, jogo):
         cursor = self.__db.cursor()
         if (jogo.id):
-            cursor.execute(SQL_ATUALIZA_JOGO, (jogo.nome, jogo.categoria, jogo.console, jogo.id))
+            cursor.execute(SQL_ATUALIZA_JOGO, (jogo.nome,
+                           jogo.categoria, jogo.console, jogo.id))
         else:
-            cursor.execute(SQL_CRIA_JOGO, (jogo.nome, jogo.categoria, jogo.console))
+            cursor.execute(SQL_CRIA_JOGO, (jogo.nome,
+                           jogo.categoria, jogo.console))
             jogo.id = cursor.lastrowid
         self.__db.commit()
         return jogo
@@ -69,7 +71,7 @@ class UsuarioDao:
         self.__db = db
         cursor = self.__db.cursor()
         cursor.execute(SQL_CRIA_TABELA_USUARIO)
-    
+
     def listar(self):
         cursor = self.__db.cursor()
         cursor.execute(SQL_BUSCA_USUARIO)
@@ -92,29 +94,33 @@ class UsuarioDao:
 
     def salvar(self, user):
         cursor = self.__db.cursor()
-        user_exist = self.buscar_por_nome(user.nome)  
+        user_exist = self.buscar_por_nome(user.nome)
         if user_exist:
-            cursor.execute(SQL_ATUALIZA_USUARIO, (user_exist.senha, user_exist.id))
+            cursor.execute(SQL_ATUALIZA_USUARIO,
+                           (user_exist.senha, user_exist.id))
         else:
             cursor.execute(SQL_CRIA_USUARIO, (user.nome, user.senha))
             user.id = cursor.lastrowid
         self.__db.commit()
         return user
-    
+
     def deletar(self, id):
         cursor = self.__db.cursor()
         cursor.execute(SQL_DELETA_USUARIO, (id, ))
         self.__db.commit()
+
 
 def traduz_jogos(jogos):
     def cria_jogo_com_tupla(tupla):
         return Jogo(tupla[1], tupla[2], tupla[3], id=tupla[0])
     return list(map(cria_jogo_com_tupla, jogos))
 
+
 def traduz_user(user):
     def cria_user_com_tupla(tupla):
         return Usuario(tupla[1], tupla[2], id=tupla[0])
     return list(map(cria_user_com_tupla, user))
 
+
 def traduz_usuario(tupla):
-    return Usuario(tupla[1], tupla[2], tupla[0] )
+    return Usuario(tupla[1], tupla[2], tupla[0])
