@@ -19,11 +19,30 @@ app = Flask(__name__)
 app.config.from_pyfile('config.py')
 
 
+# session['usuario_logado']
+def consulta(id):
+    usuario_dao = UsuarioDao(sqlite3.connect('bd.sqlite3'))
+    user = usuario_dao.buscar_por_id(id)
+    if user:   
+        return user.nome
+    else:
+        return ''
+
+
+
 @app.route('/')
 def index():
     jogo_dao = JogoDao(sqlite3.connect('bd.sqlite3'))
     lista = jogo_dao.listar()
-    return render_template('lista.html', titulo='Jogos', jogos=lista, )
+    nome = consulta(session['usuario_logado'])
+    # usuario_dao = UsuarioDao(sqlite3.connect('bd.sqlite3'))
+    # user = usuario_dao.buscar_por_id(session['usuario_logado'])
+    # if user:   
+    #     nome = user.nome
+    # else:
+    #     nome = ''
+    
+    return render_template('lista.html', titulo='Jogos', jogos=lista, usuario=nome )
 
 
 
@@ -31,7 +50,9 @@ def index():
 def novo():
     if 'usuario_logado' not in session or session['usuario_logado'] == None:
         return redirect(url_for('login', proxima=url_for('novo')))
-    return render_template('novo.html', titulo='Novo Jogo')
+    nome = consulta(session['usuario_logado'])
+    
+    return render_template('novo.html', titulo='Novo Jogo', usuario=nome)
 
 @app.route('/criar', methods=['POST'])
 def criar():
@@ -60,7 +81,8 @@ def editar(id):
     jogo = jogo_dao.busca_por_id(id)
     nome_imagem =  recupera_imagem(id)
     capa_jogo = f'capa{id}.jpg'
-    return render_template('editar.html', titulo='Editando jogo', jogo=jogo, capa_jogo=nome_imagem)
+    nome = consulta(session['usuario_logado'])
+    return render_template('editar.html', titulo='Editando jogo', jogo=jogo, capa_jogo=nome_imagem, usuario=nome)
 
 
 @app.route('/atualizar', methods=['POST',])
@@ -108,8 +130,11 @@ def autenticar():
             flash(usuario.nome + ' logou com sucesso!')
             proxima_pagina = request.form['proxima']
             return redirect(proxima_pagina)
+        else:
+            flash('Usuario ou Senha Incorreta - Tente de Novo !!!!')
+            return redirect(url_for('login'))
     else:
-        flash('Tente de Novo !!!!')
+        flash('Usuario ou Senha Incorreta - Tente de Novo !!!!')
         return redirect(url_for('login'))
 
 @app.route('/cadastro')

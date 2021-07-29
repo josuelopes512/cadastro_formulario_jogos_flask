@@ -1,15 +1,17 @@
 from models import Jogo, Usuario
 
-SQL_DELETA_USUARIO = 'delete from usuario where id = ?'
+SQL_DELETA_USUARIO = 'DELETE FROM usuario WHERE id = ?'
 SQL_USUARIO_POR_NOME = 'SELECT id, nome, senha from usuario where nome = ?'
 SQL_USUARIO_POR_ID = 'SELECT id, nome, senha from usuario where id = ?'
-SQL_ATUALIZA_USUARIO = 'UPDATE usuario SET nome= ?, senha= ? where id = ?'
+
+# SQL_ATUALIZA_USUARIO = 'UPDATE usuario SET nome= ?, senha= ? where id = ?'
+SQL_ATUALIZA_USUARIO = 'UPDATE usuario SET senha= ? where id = ?'
 SQL_CRIA_USUARIO = 'INSERT INTO usuario(nome, senha) VALUES (?,?)'
 SQL_BUSCA_USUARIO  = 'SELECT id, nome, senha from usuario'
 SQL_CRIA_TABELA_USUARIO = """
         create table if not exists usuario(
         id integer primary key autoincrement,
-        nome text not null,
+        nome text UNIQUE not null,
         senha text not null
     )"""
 
@@ -90,8 +92,9 @@ class UsuarioDao:
 
     def salvar(self, user):
         cursor = self.__db.cursor()
-        if (user.id):
-            cursor.execute(SQL_ATUALIZA_USUARIO, (user.nome, user.senha, user.id))
+        user_exist = self.buscar_por_nome(user.nome)  
+        if user_exist:
+            cursor.execute(SQL_ATUALIZA_USUARIO, (user_exist.senha, user_exist.id))
         else:
             cursor.execute(SQL_CRIA_USUARIO, (user.nome, user.senha))
             user.id = cursor.lastrowid
