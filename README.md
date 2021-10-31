@@ -1,5 +1,7 @@
 # cadastro_formulario_jogos_flask
 
+Deploy feito no repl.it: https://cadastroformulariojogosflask--josuelopes512.repl.co/
+
 ### Pagina Inicial
 <img src="https://i.imgur.com/GC6A02T.png" alt="Pagina Inicial"> 
 
